@@ -1,14 +1,20 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
 import java.io.StringReader;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import eu.ace_design.island.bot.IExplorerRaid;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import eu.ace_design.island.bot.IExplorerRaid;
+
 public class Explorer implements IExplorerRaid {
+
+    //************************************************************
+
+    private Decider decider = new Decider();
+    //************************************************************
 
     private final Logger logger = LogManager.getLogger();
 
@@ -21,12 +27,38 @@ public class Explorer implements IExplorerRaid {
         Integer batteryLevel = info.getInt("budget");
         logger.info("The drone is facing {}", direction);
         logger.info("Battery level is {}", batteryLevel);
+
+        logger.info("###################################################################");
+        //String direction = info.getString("heading");
+        logger.info(direction);
+
+        logger.info("###################################################################");
     }
 
     @Override
     public String takeDecision() {
         JSONObject decision = new JSONObject();
-        decision.put("action", "stop"); // we stop the exploration immediately
+
+        //************************************************************
+        JSONObject temp = new JSONObject();
+        //String[][] commands = decider.decide();
+        String[][] commands = decider.decide();
+        logger.info("###################################################################");
+        logger.info(commands[0][0]);
+        logger.info("###################################################################");
+        for (int i=0; i<commands.length; i++) {
+            if (i == 0) {
+                decision.put("action", commands[0][0]);
+            } else {
+                temp.put(commands[i][0], commands[i][1]);
+            }
+        }
+        if (commands.length > 0) {
+            decision.put("parameters", temp);
+        }
+        //************************************************************
+
+
         logger.info("** Decision: {}",decision.toString());
         return decision.toString();
     }
@@ -41,6 +73,17 @@ public class Explorer implements IExplorerRaid {
         logger.info("The status of the drone is {}", status);
         JSONObject extraInfo = response.getJSONObject("extras");
         logger.info("Additional information received: {}", extraInfo);
+
+
+        //************************************************************
+        logger.info("###################################################################");
+        logger.info(response.toString());
+        logger.info("###########################budget########################################");
+        String budget = decider.analyse(response);
+        logger.info(budget);
+        logger.info("###################################################################");
+
+        //************************************************************
     }
 
     @Override
