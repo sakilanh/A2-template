@@ -75,6 +75,10 @@ public class Decider {
         return getCommand();
     }
 
+    //go to function
+    //change x and y values
+    //
+
     public String[][] getCommand() {
         switch (task) {
             case FLY:
