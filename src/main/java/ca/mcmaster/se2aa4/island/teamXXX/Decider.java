@@ -17,7 +17,7 @@ public class Decider {
     }
     private Task task = Task.START;
 
-    private enum Needle {
+    public enum Needle {
         N, E, S, W
     }
     private Needle facing = Needle.E;
