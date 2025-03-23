@@ -3,16 +3,24 @@ package ca.mcmaster.se2aa4.island.teamXXX;
 import ca.mcmaster.se2aa4.island.teamXXX.Decider.Needle;
 
 public class Coordinate {
-    private int[] pos = new int[] {0, 0};
-
-    public void update(Needle direction) {
-        int[] vector = getVector(direction);
-        pos[0] += vector[0];
-        pos[1] += vector[1];
-    }
+    private int[] position = {0, 0};
 
     public int[] getPosition() {
-        return pos.clone();
+        return position.clone();
+    }
+
+    public void update(Needle direction, Task move) {
+        int[] vector = {0, 0};
+        switch (move) {
+            case FLY:
+                vector = getFrontVector(direction);
+            case LEFT:
+                vector = getLeftVector(direction);
+            case RIGHT:
+                vector = getRightVector(direction);
+        }
+        position[0] += vector[0];
+        position[1] += vector[1];
     }
 
     private int[] getFrontVector(Needle direction) {
@@ -59,4 +67,6 @@ public class Coordinate {
                 return new int[] {0, 0};
         }
     }
+
+
 }
