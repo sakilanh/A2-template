@@ -15,13 +15,48 @@ public class Coordinate {
         return pos.clone();
     }
 
-    private int[] getVector(Needle direction) {
-        switch (direction) {
-            case N: return new int[] {0, -1};
-            case E: return new int[] {1, 0};
-            case S: return new int[] {0, 1};
-            case W: return new int[] {-1, 0};
-            default: return new int[] {0, 0};
+    private int[] getFrontVector(Needle direction) {
+        switch(direction) {
+            case N:
+                return new int[] {0, -1};
+            case E:
+                return new int[] {1, 0};
+            case S:
+                return new int[] {0, 1};
+            case W:
+                return new int[] {-1, 0};
+            default:
+                return new int[] {0, 0};
+        }
+    }
+
+    private int[] getLeftVector(Needle direction) {
+        switch(direction) {
+            case N:
+                return new int[] {-1, -1};
+            case E:
+                return new int[] {1, -1};
+            case S:
+                return new int[] {1, 1};
+            case W:
+                return new int[] {-1, 1};
+            default:
+                return new int[] {0, 0};
+        }
+    }
+
+    private int[] getRightVector(Needle direction) {
+        switch(direction) {
+            case N:
+                return new int[] {1, -1};
+            case E:
+                return new int[] {1, 1};
+            case S:
+                return new int[] {-1, 1};
+            case W:
+                return new int[] {-1, -1};
+            default:
+                return new int[] {0, 0};
         }
     }
 }
