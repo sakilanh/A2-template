@@ -1,6 +1,7 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
 import ca.mcmaster.se2aa4.island.teamXXX.Decider.Needle;
+import ca.mcmaster.se2aa4.island.teamXXX.Decider.Task;
 
 public class Coordinate {
     private int[] position = {0, 0};
