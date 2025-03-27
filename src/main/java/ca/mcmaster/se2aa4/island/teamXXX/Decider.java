@@ -7,23 +7,29 @@ import org.json.JSONObject;
 
 public class Decider {
 
+    //stages of mission
     private enum Stage {
         FIND_ISLAND, EXPLORE_ISLAND, END;
     }
     private Stage stage = Stage.FIND_ISLAND;
 
+    //different task(actions)
     public enum Task {
         START, FLY, LEFT, RIGHT, SCAN, RADAR_FRONT, RADAR_LEFT, RADAR_RIGHT, STOP, RADAR
     }
     private Task task = Task.START;
 
+    //compass
     public enum Needle {
         N, E, S, W
     }
     private Needle facing = Needle.E;
 
+    //map / coordinate
     private Coordinate map = new Coordinate();
+    public String pos_msg = "0-0";
 
+    //decide function sends an action to Explorer class
     public String[][] decide() {
 
         if (stage == Stage.FIND_ISLAND) {
@@ -37,7 +43,6 @@ public class Decider {
         
     }
 
-    
     public String[][] findIsland() {
         if ((task == Task.START)) {
             task = Task.RADAR_RIGHT;
@@ -83,14 +88,23 @@ public class Decider {
         return getCommand();
     }
 
-    //exploring island
+    //##################################################################################################
+    //##################################################################################################
+    //##################################################################################################
+    //Exploring Island
+
+    //variable to know wether you are facing north or south, can replace with north/south needle
     private boolean lookingDown = true;
+
+    //variable wether to check if you are in ocean
     private boolean checkForOcean = true;
+
+    //counter to see how many errors
     private int notFoundIn = 0;
 
+    private int debug = 0; //DEBUG  
 
-    private int debug = 0;
-
+    //patrol function controls how to explore island
     public String[][] patrol() {
         debug += 1;
         if (debug == 3000) {
@@ -113,6 +127,7 @@ public class Decider {
         return getCommand();
     }
 
+    //OffIsland function defines what to do when you leave island
     private int offIslandSteps = 0;
     private void offIsland() {
         switch (offIslandSteps) {
@@ -140,6 +155,7 @@ public class Decider {
         }
     }
 
+    //functions to control U turns
     private int turnCounter = 0;
     public void UturnRight() {
         Task[] algo = {Task.FLY, Task.FLY, Task.LEFT, Task.LEFT, Task.LEFT, Task.FLY, Task.RIGHT};
@@ -166,6 +182,7 @@ public class Decider {
         }
     }
 
+    //onlyOcean function that checks if you are only on a ocean tile
     private boolean onlyOcean(JSONArray array) {
         for (int i=0; i < array.length(); i++) {
             if (!array.getString(i).equals("OCEAN")) {
@@ -175,20 +192,26 @@ public class Decider {
         return true;
     }
 
-    //#############################################################################
+    //##################################################################################################
+    //##################################################################################################
+    //##################################################################################################
 
+    //getCommand function return JSON information to be used in Explorer class
     public String[][] getCommand() {
         switch (task) {
             case FLY:
                 map.update(facing, Task.FLY);
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
                 return new String[][] {{"fly"}};
             case LEFT:
                 facing = turnLeft(facing);
                 map.update(facing, Task.LEFT);
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
                 return new String[][] {{"heading"}, {"direction", facing.toString()}};
             case RIGHT:
                 facing = turnRight(facing);
                 map.update(facing, Task.RIGHT);
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
                 return new String[][] {{"heading"}, {"direction", facing.toString()}};
             case SCAN:
                 return new String[][] {{"scan"}};
@@ -205,6 +228,7 @@ public class Decider {
         }
     }
 
+    //turnLeft and turnRight facilitate compass turning
     public Needle turnLeft(Needle current) {
         Needle turned = current;
         switch (current) {
@@ -248,6 +272,7 @@ public class Decider {
     JSONArray creeks;
     JSONArray sites;
 
+    //analyse function break down response and update state
     public String analyse(JSONObject response) {
         budget -= response.getInt("cost");
         if (task == Task.RADAR_FRONT) {
