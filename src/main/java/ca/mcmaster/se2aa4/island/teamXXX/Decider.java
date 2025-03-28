@@ -9,13 +9,13 @@ import org.json.JSONObject;
 
 public class Decider {
 
-    //stages of mission
+    //Stages of Mission
     private enum Stage {
-        FIND_ISLAND, EXPLORE_ISLAND, END;
+        FIND_ISLAND, EXPLORE_ISLAND, GO_TO_SITE, END;
     }
     private Stage stage = Stage.FIND_ISLAND;
 
-    //different task(actions)
+    //Different Task(actions)
     public enum Task {
         START, FLY, LEFT, RIGHT, SCAN, RADAR_FRONT, RADAR_LEFT, RADAR_RIGHT, STOP, RADAR
     }
@@ -29,7 +29,19 @@ public class Decider {
 
     //map / coordinate
     private Coordinate map = new Coordinate();
-    public String pos_msg = "0-0";
+    public String pos_msg = "0-0-E-5-5-FIND_ISLAND";
+
+    private String c = "c";
+
+    int xdif = 5;
+    int ydif = 5;
+
+    private int debug2 = 0;
+
+    //int[] destination = {5, 5};
+    int[] destination = {50, 50};
+    //int[] destination = {60, 70};
+    
 
     //decide function sends an action to Explorer class
     public String[][] decide() {
@@ -38,6 +50,16 @@ public class Decider {
             return findIsland2();
         } else if (stage == Stage.EXPLORE_ISLAND) {
             return patrol();
+        } else if (stage == Stage.GO_TO_SITE) {
+            debug2 += 1;
+            goTo();
+            //if (debug2 % 2 == 0 && debug2 > 20) {
+            //    task = Task.SCAN;
+            //}
+            if (debug2 == 50) { //35, 42
+                task = Task.STOP;
+            }
+            return getCommand();
         } else {
             task = Task.STOP;
             return getCommand();
@@ -115,7 +137,10 @@ public class Decider {
 
             task = Task.STOP;
         } else if (notFoundIn == 3) { //a
-            task = Task.STOP;         //a
+            //task = Task.STOP;         //a
+            setAlignmentAlorithm();
+            stage = Stage.GO_TO_SITE;
+            goTo();
 
         } else if (onlyOcean(biomes) && checkForOcean) {
             offIsland();
@@ -197,23 +222,150 @@ public class Decider {
     //##################################################################################################
     //##################################################################################################
     //##################################################################################################
+    
+    //function sets the algorithm for turns so you face the correct direction for y travel or skips Y travel 
+    private void setAlignmentAlorithm() {
+        int x_difference = destination[0]-map.getPosition()[0];
+        int y_difference = destination[1]-map.getPosition()[1];
+
+        xdif = x_difference; ydif = y_difference;
+
+            if (y_difference < 0) { //to the north
+                switch (facing) {
+                    case N:
+                        goToStep = GoToSteps.Y_Travel; break;
+                    case E:
+                        properLeftAlgorithm(); break;
+                    case S:
+                        turnAroundAlgorithm(); break;
+                    case W:
+                        properRightAlgorithm(); break;
+                }
+            } else if (y_difference > 0) { //to the south
+                switch (facing) {
+                    case N:
+                        c = "w1"; 
+                        turnAroundAlgorithm(); break;
+                    case E:
+                        properRightAlgorithm(); break;
+                    case S:
+                        goToStep = GoToSteps.Y_Travel; break;
+                    case W:
+                        properLeftAlgorithm(); break;
+                }
+            } else { //on same y
+                
+            }
+    }
+    
+    private enum GoToSteps {
+        Y_Alignment, X_Travel, Y_Travel
+    }
+    private GoToSteps goToStep = GoToSteps.Y_Alignment;
+    private Task[] Y_Alignment_Algo;
+    private int alignCounter = 0;
+    public void turnAroundAlgorithm() {
+        Y_Alignment_Algo = new Task[] {Task.LEFT, Task.RIGHT, Task.RIGHT, Task.RIGHT, Task.FLY, Task.FLY};
+    }
+    public void properLeftAlgorithm() {
+        Y_Alignment_Algo = new Task[] {Task.FLY, Task.RIGHT, Task.RIGHT, Task.RIGHT, Task.FLY, Task.FLY};
+    }
+    public void properRightAlgorithm() {
+        Y_Alignment_Algo = new Task[] {Task.FLY, Task.LEFT, Task.LEFT, Task.LEFT, Task.FLY, Task.FLY};
+    }
+
+    //Go To feature travels first in y direction, then x direction
+    private void goTo() {
+        int x_difference = destination[0]-map.getPosition()[0];
+        int y_difference = destination[1]-map.getPosition()[1];
+
+        xdif = x_difference; ydif = y_difference;
+
+        if (goToStep == GoToSteps.Y_Alignment) { //y alignment
+            task = Y_Alignment_Algo[alignCounter];
+            alignCounter += 1;
+            c=c+alignCounter;
+            if (alignCounter == Y_Alignment_Algo.length) {
+                alignCounter = 0;
+                goToStep = GoToSteps.Y_Travel;
+            }
+        } else if (goToStep == GoToSteps.Y_Travel) {
+            if (y_difference != 1 && y_difference != -1) {
+                task = Task.FLY;
+            } else {
+                if (x_difference < 0) { //left
+                    if (facing == Needle.N) { //< ^
+                        task = Task.LEFT;
+                    } else {
+                        task = Task.RIGHT; //< v
+                    }
+                } else if (x_difference > 0) { //right
+                    if (facing == Needle.N) { //^ >
+                        task = Task.RIGHT;
+                    } else {
+                        task = Task.LEFT; //v >
+                    }
+                } else { //infront
+                    task = Task.FLY;
+                }
+                goToStep = GoToSteps.X_Travel;
+            }
+        } else if (goToStep == GoToSteps.X_Travel) {
+            if (x_difference != 0) {
+                task = Task.FLY;
+            } else {
+                task = Task.STOP;
+            }
+        }
+    }
+
+    //##################################################################################################
+    //##################################################################################################
+    //##################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //getCommand function return JSON information to be used in Explorer class
     public String[][] getCommand() {
+        int[] position = map.getPosition();
+
+        pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
+                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
+
         switch (task) {
             case FLY:
                 map.update(facing, Task.FLY);
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
+                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
+
                 return new String[][] {{"fly"}};
             case LEFT:
-                facing = turnLeft(facing);
                 map.update(facing, Task.LEFT);
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
+                facing = turnLeft(facing);
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
+                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
+
                 return new String[][] {{"heading"}, {"direction", facing.toString()}};
             case RIGHT:
-                facing = turnRight(facing);
                 map.update(facing, Task.RIGHT);
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1];
+                facing = turnRight(facing);
+                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
+                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
+
                 return new String[][] {{"heading"}, {"direction", facing.toString()}};
             case SCAN:
                 return new String[][] {{"scan"}};
