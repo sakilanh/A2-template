@@ -1,5 +1,7 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
+import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -293,8 +295,17 @@ public class Decider {
         biomes = extras.getJSONArray("biomes");
         creeks = extras.getJSONArray("creeks");
         sites = extras.getJSONArray("sites");
+        if (creeks.length() > 0) {
+            listOfCreeks.add(creeks.getString(0));
+        }
+        if (sites.length() > 0) {
+            listOfSites.add(sites.getString(0));
+        }
         String aa = "" + biomes.toString() + creeks.toString() + sites.toString();
         return aa;
     }
+
+    ArrayList<String> listOfSites = new ArrayList<>();
+    ArrayList<String> listOfCreeks = new ArrayList<>();
 
 }
