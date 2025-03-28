@@ -7,18 +7,20 @@ public class Coordinate {
     private int[] position = {0, 0};
 
     public int[] getPosition() {
-        return position.clone();
+        return position;
     }
 
     public void update(Needle direction, Task move) {
         int[] vector = {0, 0};
         switch (move) {
             case FLY:
-                vector = getFrontVector(direction);
+                vector = getFrontVector(direction); break;
             case LEFT:
-                vector = getLeftVector(direction);
+                vector = getLeftVector(direction); break;
             case RIGHT:
-                vector = getRightVector(direction);
+                vector = getRightVector(direction); break;
+            //default:
+            //    vector = new int[] {0, 0};
         }
         position[0] += vector[0];
         position[1] += vector[1];

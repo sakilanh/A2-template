@@ -104,10 +104,11 @@ public class Explorer implements IExplorerRaid {
         int i = 1;
         int j = 0;
         for (String e : inout) {
-            if (j % 2 == 0) {
-                logger.info(i);
+            logger.info(j);
+            //if (j % 2 == 0) {
+            //    logger.info(i);
                 i += 1;
-            }
+            //}
             logger.info(e);
             logger.info(poses.get(j));
             j += 1;
