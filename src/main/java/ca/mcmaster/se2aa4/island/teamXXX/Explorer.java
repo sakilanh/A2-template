@@ -17,6 +17,7 @@ public class Explorer implements IExplorerRaid {
     private Decider decider = new Decider();
     ArrayList<String> inout = new ArrayList<>();
     ArrayList<String> poses = new ArrayList<>();
+    int total =0;
     //************************************************************
 
     private final Logger logger = LogManager.getLogger();
@@ -49,10 +50,10 @@ public class Explorer implements IExplorerRaid {
         logger.info("###################################################################");
         logger.info(commands[0][0]);
         inout.add(commands[0][0]);
+        poses.add(decider.pos_msg);
         if (commands[0][0].equals("stop")) {
             gamestat();
         }
-        poses.add(decider.pos_msg);
         logger.info("###################################################################");
         for (int i=0; i<commands.length; i++) {
             if (i == 0) {
@@ -89,6 +90,7 @@ public class Explorer implements IExplorerRaid {
         logger.info("###########################budget########################################");
         String budget = decider.analyse(response);
         logger.info(budget);
+        total += cost;
         logger.info("###################################################################");
 
         //************************************************************
@@ -112,6 +114,7 @@ public class Explorer implements IExplorerRaid {
             logger.info(poses.get(j));
             j += 1;
         }
+        logger.info("buco:"+total);
     }
     //########################################################################################
 

@@ -1,6 +1,7 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -11,7 +12,7 @@ public class Decider {
 
     //Stages of Mission
     private enum Stage {
-        FIND_ISLAND, EXPLORE_ISLAND, GO_TO_SITE, END;
+        FIND_ISLAND, EXPLORE_ISLAND, GO_TO_SITE, CALCULATE_CLOSEST_CREEK, END;
     }
     private Stage stage = Stage.FIND_ISLAND;
 
@@ -59,6 +60,18 @@ public class Decider {
             if (debug2 == 50) { //35, 42
                 task = Task.STOP;
             }
+            return getCommand();
+        } else if (stage == Stage.CALCULATE_CLOSEST_CREEK) {
+            String closest_creek = closestCreek();
+            if (closest_creek == null) {
+                pos_msg = "NO CREEK FOUND";
+            } else {
+                int[] creek_location = location_of_creeks.get(closest_creek);
+                pos_msg = "Site:"+site_location[0]+"-"+site_location[1]+
+                " / Closest Creek:"+creek_location[0]+"-"+creek_location[1]+closest_creek;
+            }
+            
+            task = task.STOP;
             return getCommand();
         } else {
             task = Task.STOP;
@@ -137,10 +150,15 @@ public class Decider {
 
             task = Task.STOP;
         } else if (notFoundIn == 3) { //a
+
+            /*
             //task = Task.STOP;         //a
             setAlignmentAlorithm();
             stage = Stage.GO_TO_SITE;
             goTo();
+            */
+           stage = Stage.CALCULATE_CLOSEST_CREEK;
+           decide();
 
         } else if (onlyOcean(biomes) && checkForOcean) {
             offIsland();
@@ -343,8 +361,8 @@ public class Decider {
     public String[][] getCommand() {
         int[] position = map.getPosition();
 
-        pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
-                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
+        //pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
+        //        "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
 
         switch (task) {
             case FLY:
@@ -448,16 +466,52 @@ public class Decider {
         creeks = extras.getJSONArray("creeks");
         sites = extras.getJSONArray("sites");
         if (creeks.length() > 0) {
-            listOfCreeks.add(creeks.getString(0));
+            location_of_creeks.put(creeks.getString(0), map.getPosition());
         }
         if (sites.length() > 0) {
-            listOfSites.add(sites.getString(0));
+            site_location = map.getPosition();
         }
         String aa = "" + biomes.toString() + creeks.toString() + sites.toString();
         return aa;
     }
 
-    ArrayList<String> listOfSites = new ArrayList<>();
-    ArrayList<String> listOfCreeks = new ArrayList<>();
+    //##################################################################################################
+    //####################### Finding CLosest Creek ####################################################
+    //##################################################################################################
+
+    //location of emergency site
+    int[] site_location = {0, 0};
+
+    //key is creek id, value is array of location
+    Map<String, int[]> location_of_creeks = new HashMap<>();
+
+    //return the key of the closest creek from all creeks or return null
+    private String closestCreek() {
+        String creek_index = null;
+        double shortest_distance = -1;
+
+        //go through all keys and get the location of the creek
+        for (String key : location_of_creeks.keySet()) {
+            int[] creek_location = location_of_creeks.get(key);
+
+            //call function to find distance than update if it the shortest so far
+            double d = distance(creek_location[0], creek_location[1], site_location[0], site_location[1]);
+            if (shortest_distance == -1) {
+                creek_index = key;
+                shortest_distance = d;
+            } else {
+                if (d < shortest_distance) {
+                    creek_index = key;
+                    shortest_distance = d;
+                }
+            }
+        }
+        return creek_index;
+    }
+
+    //calculate distance between 2 points
+    private double distance(int x1, int y1, int x2, int y2) {
+        return Math.sqrt( Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2) ); //sqrt( (x2-x1)^2 + (y2-y1)^2 )
+    }
 
 }
