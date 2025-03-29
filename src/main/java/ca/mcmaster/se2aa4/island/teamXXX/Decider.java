@@ -7,14 +7,16 @@ public class Decider {
 
     //Stages of Mission
     private enum Stage {
-        FIND_ISLAND, EXPLORE_ISLAND, GO_TO_SITE, CALCULATE_CLOSEST_CREEK, END;
+        FIND_ISLAND, EXPLORE_ISLAND, CALCULATE_CLOSEST_CREEK, END;
     }
+    //current stage
     private Stage stage = Stage.FIND_ISLAND;
 
     //Different Task(actions)
     public enum Task {
         START, FLY, LEFT, RIGHT, SCAN, RADAR_FRONT, RADAR_LEFT, RADAR_RIGHT, STOP, RADAR
     }
+    //current task
     private Task task = Task.START;
 
     //Compass class keeps track of direction
@@ -22,22 +24,12 @@ public class Decider {
 
     //map keeps track of current coordinate
     private Coordinate map = new Coordinate();
+
+    //logging information
     public String pos_msg = "0-0-E-5-5-FIND_ISLAND";
 
     //class for important points
     private Points points = new Points();
-
-    //State keeps record of return values of 
-    private State state = new State();
-
-    /*
-    //private String c = "c";
-    int xdif = 5;
-    int ydif = 5;
-    */ //TO REMOVE
-
-    private int debug2 = 0;
-    
 
     //decide function sends an action to Explorer class
     public String[][] decide() {
@@ -47,16 +39,6 @@ public class Decider {
             return getCommand();
         } else if (stage == Stage.EXPLORE_ISLAND) {
             patrol();
-            return getCommand();
-        } else if (stage == Stage.GO_TO_SITE) {
-            debug2 += 1;
-            //goTo();
-            //if (debug2 % 2 == 0 && debug2 > 20) {
-            //    task = Task.SCAN;
-            //}
-            if (debug2 == 50) { //35, 42
-                task = Task.STOP;
-            }
             return getCommand();
         } else if (stage == Stage.CALCULATE_CLOSEST_CREEK) {
             //String closest_creek = closestCreek();
@@ -87,7 +69,7 @@ public class Decider {
     public String[][] findIsland() {
         if ((task == Task.START)) {
             task = Task.RADAR_RIGHT;
-        } else if (found.equals("GROUND")) {
+        } else if (land_found()) {
             if (task == Task.RADAR_RIGHT) {
                 task = Task.RIGHT;
             } else {
@@ -115,7 +97,7 @@ public class Decider {
                 task = Task.RIGHT;
             } else if (task == Task.RIGHT) {
                 task = task.RADAR_FRONT;
-            } else if (found.equals("GROUND")) {
+            } else if (land_found()) {
                 if (range < 0) {
                     task = Task.SCAN;
                     stage = Stage.EXPLORE_ISLAND;
@@ -142,29 +124,11 @@ public class Decider {
     //counter to see how many times you do not see land
     private int notFoundIn = 0;
 
-    //private int debug = 0; //DEBUG   TO REMOVE
-
     //patrol function controls how to explore island
     public void patrol() {
-
-        /* TO REMOVE
-        debug += 1;
-        if (debug == 3000) {
-
-            //error at 1240 for map 10
-
-            task = Task.STOP;
-        } else 
-        */
         
+        //if you fail finding land 2 times, move to next stage
         if (notFoundIn == 3) { //a
-
-            /*
-            //task = Task.STOP;         //a
-            setAlignmentAlorithm();
-            stage = Stage.GO_TO_SITE;
-            goTo();
-            */
            stage = Stage.CALCULATE_CLOSEST_CREEK;
            decide();
 
@@ -182,7 +146,6 @@ public class Decider {
             task = Task.SCAN;
             checkForOcean = true;
         }
-        //return getCommand(); TO REMOVE
     }
 
     //OffIsland function defines what to do when you leave island
@@ -196,7 +159,8 @@ public class Decider {
             
             case 1:
                 //if you see ground, fly to it
-                if (found.equals("GROUND")) {
+                if (land_found()) {
+                
                     if (range < 0) {
                         task = Task.SCAN;
                         offIslandSteps = 0;
@@ -254,110 +218,6 @@ public class Decider {
         return false;
     }
 
-    //##################################################################################################
-    //################ Going to Site ###################################################################
-    //##################################################################################################
-
-    /*
-
-    int[] destination = {5, 5};
-    
-    //function sets the algorithm for turns so you face the correct direction for y travel or skips Y travel 
-    private void setAlignmentAlorithm() {
-        int x_difference = destination[0]-map.getPosition()[0];
-        int y_difference = destination[1]-map.getPosition()[1];
-
-        xdif = x_difference; ydif = y_difference;
-
-            if (y_difference < 0) { //to the north
-                switch (facing) {
-                    case N:
-                        goToStep = GoToSteps.Y_Travel; break;
-                    case E:
-                        properLeftAlgorithm(); break;
-                    case S:
-                        turnAroundAlgorithm(); break;
-                    case W:
-                        properRightAlgorithm(); break;
-                }
-            } else if (y_difference > 0) { //to the south
-                switch (facing) {
-                    case N:
-                        c = "w1"; 
-                        turnAroundAlgorithm(); break;
-                    case E:
-                        properRightAlgorithm(); break;
-                    case S:
-                        goToStep = GoToSteps.Y_Travel; break;
-                    case W:
-                        properLeftAlgorithm(); break;
-                }
-            } else { //on same y
-                
-            }
-    }
-    
-    private enum GoToSteps {
-        Y_Alignment, X_Travel, Y_Travel
-    }
-    private GoToSteps goToStep = GoToSteps.Y_Alignment;
-    private Task[] Y_Alignment_Algo;
-    private int alignCounter = 0;
-    public void turnAroundAlgorithm() {
-        Y_Alignment_Algo = new Task[] {Task.LEFT, Task.RIGHT, Task.RIGHT, Task.RIGHT, Task.FLY, Task.FLY};
-    }
-    public void properLeftAlgorithm() {
-        Y_Alignment_Algo = new Task[] {Task.FLY, Task.RIGHT, Task.RIGHT, Task.RIGHT, Task.FLY, Task.FLY};
-    }
-    public void properRightAlgorithm() {
-        Y_Alignment_Algo = new Task[] {Task.FLY, Task.LEFT, Task.LEFT, Task.LEFT, Task.FLY, Task.FLY};
-    }
-
-    //Go To feature travels first in y direction, then x direction
-    private void goTo() {
-        int x_difference = destination[0]-map.getPosition()[0];
-        int y_difference = destination[1]-map.getPosition()[1];
-
-        xdif = x_difference; ydif = y_difference;
-
-        if (goToStep == GoToSteps.Y_Alignment) { //y alignment
-            task = Y_Alignment_Algo[alignCounter];
-            alignCounter += 1;
-            c=c+alignCounter;
-            if (alignCounter == Y_Alignment_Algo.length) {
-                alignCounter = 0;
-                goToStep = GoToSteps.Y_Travel;
-            }
-        } else if (goToStep == GoToSteps.Y_Travel) {
-            if (y_difference != 1 && y_difference != -1) {
-                task = Task.FLY;
-            } else {
-                if (x_difference < 0) { //left
-                    if (facing == Needle.N) { //< ^
-                        task = Task.LEFT;
-                    } else {
-                        task = Task.RIGHT; //< v
-                    }
-                } else if (x_difference > 0) { //right
-                    if (facing == Needle.N) { //^ >
-                        task = Task.RIGHT;
-                    } else {
-                        task = Task.LEFT; //v >
-                    }
-                } else { //infront
-                    task = Task.FLY;
-                }
-                goToStep = GoToSteps.X_Travel;
-            }
-        } else if (goToStep == GoToSteps.X_Travel) {
-            if (x_difference != 0) {
-                task = Task.FLY;
-            } else {
-                task = Task.STOP;
-            }
-        }
-    }
-    */
 
     //##################################################################################################
     //############ Command Information #################################################################
@@ -368,30 +228,15 @@ public class Decider {
     public String[][] getCommand() {
         int[] position = map.getPosition();
 
-        //pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
-        //        "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-
         switch (task) {
             case FLY:
-                /*
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
-                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-                */
                 map.update(compass.getNeedle(), Task.FLY);
                 return new String[][] {{"fly"}};
             case LEFT:
-                /*
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
-                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-                */
                 map.update(compass.getNeedle(), Task.LEFT);
                 compass.turnLeft();
                 return new String[][] {{"heading"}, {"direction", compass.getNeedle().toString()}};
             case RIGHT:
-                /*
-                pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
-                "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-                */
                 map.update(compass.getNeedle(), Task.RIGHT);
                 compass.turnRight();
                 return new String[][] {{"heading"}, {"direction", compass.getNeedle().toString()}};
@@ -414,28 +259,29 @@ public class Decider {
     //####################### Analysing Response and Updating ##########################################
     //##################################################################################################
 
-    /*
-    //calls state class and returns log message
-    public String analyseWrapper(JSONObject response) {
-        return state.analyse(response, task, map.getPosition());
+    //found feature is for radar command
+    private enum Found {
+        NOT_IN_RANGE, GROUND
     }
-    */
-
-    //analyising the response
-    //analyising the response
-    private int budget = 1000;
-    private String status = "OK";
-    private String found = "NOT_IN_RANGE";
-    private int count = 0;
+    private Found found = Found.NOT_IN_RANGE;
     private int range;
 
+    //return whether land was found
+    public boolean land_found() {
+        if (found == Found.GROUND) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //ouput of scan
     JSONArray biomes;
     JSONArray creeks;
     JSONArray sites;
 
     //analyse function break down response and update state
     public String analyse(JSONObject response) {
-        budget -= response.getInt("cost");
         if (task == Task.RADAR_FRONT) {
             return analyseRadar(response.getJSONObject("extras"));
         } else if (task == Task.SCAN) {
@@ -444,26 +290,35 @@ public class Decider {
         return "na";
     }
 
+    //analysing radar
     private String analyseRadar(JSONObject extras) {
         range = extras.getInt("range");
-        found = extras.getString("found");
-        String aa = "" + range + " " + found;
-        return aa;
+        if (extras.getString("found").equals("GROUND")) {
+            found = Found.GROUND;
+        } else {
+            found = Found.NOT_IN_RANGE;
+        }
+
+        String logString = "" + range + " " + found.toString();
+        return logString;
     }
+
+    //analysing scan
     private String analyseScan(JSONObject extras) {
         biomes = extras.getJSONArray("biomes");
         creeks = extras.getJSONArray("creeks");
         sites = extras.getJSONArray("sites");
+
+        //if you find sites or creeks, update the points
         if (creeks.length() > 0) {
-            //location_of_creeks.put(creeks.getString(0), map.getPosition());
             points.addToCreeks(creeks.getString(0), map.getPosition());
         }
         if (sites.length() > 0) {
-            //site_location = map.getPosition();
             points.setSiteLocation(map.getPosition());
         }
-        String aa = "" + biomes.toString() + creeks.toString() + sites.toString();
-        return aa;
+
+        String logString = "" + biomes.toString() + creeks.toString() + sites.toString();
+        return logString;
     }
 
 
