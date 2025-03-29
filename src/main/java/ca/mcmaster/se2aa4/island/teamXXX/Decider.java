@@ -1,12 +1,7 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-
 
 public class Decider {
 
@@ -22,43 +17,40 @@ public class Decider {
     }
     private Task task = Task.START;
 
-    //compass
-    public enum Needle {
-        N, E, S, W
-    }
-    private Needle facing = Needle.E;
+    //Compass class keeps track of direction
+    private Compass compass = new Compass();
 
-    //map / coordinate
+    //map keeps track of current coordinate
     private Coordinate map = new Coordinate();
     public String pos_msg = "0-0-E-5-5-FIND_ISLAND";
 
+    //class for important points
     private Points points = new Points();
 
+    //State keeps record of return values of 
+    private State state = new State();
 
-
-
-    private String c = "c";
-
+    /*
+    //private String c = "c";
     int xdif = 5;
     int ydif = 5;
+    */ //TO REMOVE
 
     private int debug2 = 0;
-
-    //int[] destination = {5, 5};
-    int[] destination = {50, 50};
-    //int[] destination = {60, 70};
     
 
     //decide function sends an action to Explorer class
     public String[][] decide() {
 
         if (stage == Stage.FIND_ISLAND) {
-            return findIsland2();
+            findIsland2();
+            return getCommand();
         } else if (stage == Stage.EXPLORE_ISLAND) {
-            return patrol();
+            patrol();
+            return getCommand();
         } else if (stage == Stage.GO_TO_SITE) {
             debug2 += 1;
-            goTo();
+            //goTo();
             //if (debug2 % 2 == 0 && debug2 > 20) {
             //    task = Task.SCAN;
             //}
@@ -88,6 +80,10 @@ public class Decider {
         
     }
 
+    //##################################################################################################
+    //####################### Finding Island ###########################################################
+    //##################################################################################################
+
     public String[][] findIsland() {
         if ((task == Task.START)) {
             task = Task.RADAR_RIGHT;
@@ -114,7 +110,7 @@ public class Decider {
     }
     
 
-    public String[][] findIsland2() {
+    public void findIsland2() {
             if ((task == Task.START)||(task == Task.LEFT)) {
                 task = Task.RIGHT;
             } else if (task == Task.RIGHT) {
@@ -130,34 +126,38 @@ public class Decider {
             } else {
                 task = Task.LEFT;
             }
-        return getCommand();
+        //return getCommand(); TO REMOVE
     }
 
     //##################################################################################################
+    //####################### Exploring Island #########################################################
     //##################################################################################################
-    //##################################################################################################
-    //Exploring Island
 
-    //variable to know wether you are facing north or south, can replace with north/south needle
+    //variable to know wether you are facing north or south
     private boolean lookingDown = true;
 
     //variable wether to check if you are in ocean
     private boolean checkForOcean = true;
 
-    //counter to see how many errors
+    //counter to see how many times you do not see land
     private int notFoundIn = 0;
 
-    private int debug = 0; //DEBUG  
+    //private int debug = 0; //DEBUG   TO REMOVE
 
     //patrol function controls how to explore island
-    public String[][] patrol() {
+    public void patrol() {
+
+        /* TO REMOVE
         debug += 1;
         if (debug == 3000) {
 
             //error at 1240 for map 10
 
             task = Task.STOP;
-        } else if (notFoundIn == 3) { //a
+        } else 
+        */
+        
+        if (notFoundIn == 3) { //a
 
             /*
             //task = Task.STOP;         //a
@@ -168,26 +168,34 @@ public class Decider {
            stage = Stage.CALCULATE_CLOSEST_CREEK;
            decide();
 
-        } else if (hasOcean(biomes) && checkForOcean) { //onlyOcean
+        //if you see ocean tile and are looking for ocean
+        } else if (hasOcean(biomes) && checkForOcean) {
             offIsland();
+
+        //if you scanned, move forward
         } else if ((task == Task.SCAN)) {
             task = Task.FLY;
             notFoundIn = 0; //a
+
+        //otherwise scan and check for ocean
         } else {
             task = Task.SCAN;
             checkForOcean = true;
         }
-        return getCommand();
+        //return getCommand(); TO REMOVE
     }
 
     //OffIsland function defines what to do when you leave island
     private int offIslandSteps = 0;
     private void offIsland() {
         switch (offIslandSteps) {
+
+            //on the first step, radar infront
             case 0:
                 task = Task.RADAR_FRONT; offIslandSteps += 1; break;
             
             case 1:
+                //if you see ground, fly to it
                 if (found.equals("GROUND")) {
                     if (range < 0) {
                         task = Task.SCAN;
@@ -196,6 +204,8 @@ public class Decider {
                         task = Task.FLY;
                         range -= 1;
                     }
+
+                //if you do not see ground, u turn depending on if you are looking up or down
                 } else {
                     if (lookingDown) {
                         UturnLeft();
@@ -204,7 +214,6 @@ public class Decider {
                     }
                 }
                 break;
-            
         }
     }
 
@@ -235,16 +244,6 @@ public class Decider {
         }
     }
 
-    //onlyOcean function that checks if you are only on a ocean tile
-    private boolean onlyOcean(JSONArray array) {
-        for (int i=0; i < array.length(); i++) {
-            if (!array.getString(i).equals("OCEAN")) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     //hasOcean function that checks if you are on a ocean tile
     private boolean hasOcean(JSONArray array) {
         for (int i=0; i < array.length(); i++) {
@@ -256,8 +255,12 @@ public class Decider {
     }
 
     //##################################################################################################
+    //################ Going to Site ###################################################################
     //##################################################################################################
-    //##################################################################################################
+
+    /*
+
+    int[] destination = {5, 5};
     
     //function sets the algorithm for turns so you face the correct direction for y travel or skips Y travel 
     private void setAlignmentAlorithm() {
@@ -354,25 +357,11 @@ public class Decider {
             }
         }
     }
+    */
 
     //##################################################################################################
+    //############ Command Information #################################################################
     //##################################################################################################
-    //##################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     //getCommand function return JSON information to be used in Explorer class
@@ -384,33 +373,36 @@ public class Decider {
 
         switch (task) {
             case FLY:
-                map.update(facing, Task.FLY);
+                /*
                 pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
                 "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-
+                */
+                map.update(compass.getNeedle(), Task.FLY);
                 return new String[][] {{"fly"}};
             case LEFT:
-                map.update(facing, Task.LEFT);
-                facing = turnLeft(facing);
+                /*
                 pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
                 "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-
-                return new String[][] {{"heading"}, {"direction", facing.toString()}};
+                */
+                map.update(compass.getNeedle(), Task.LEFT);
+                compass.turnLeft();
+                return new String[][] {{"heading"}, {"direction", compass.getNeedle().toString()}};
             case RIGHT:
-                map.update(facing, Task.RIGHT);
-                facing = turnRight(facing);
+                /*
                 pos_msg = ""+map.getPosition()[0]+"-"+map.getPosition()[1]+"-"+xdif+"-"+ydif+
                 "-"+task.toString()+"-"+facing.toString()+"-"+stage.toString()+"-"+c;
-
-                return new String[][] {{"heading"}, {"direction", facing.toString()}};
+                */
+                map.update(compass.getNeedle(), Task.RIGHT);
+                compass.turnRight();
+                return new String[][] {{"heading"}, {"direction", compass.getNeedle().toString()}};
             case SCAN:
                 return new String[][] {{"scan"}};
             case RADAR_FRONT:
-                return new String[][] {{"echo"}, {"direction", facing.toString()}};
+                return new String[][] {{"echo"}, {"direction", compass.getNeedle().toString()}};
             case RADAR_LEFT:
-                return new String[][] {{"echo"}, {"direction", turnLeft(facing).toString()}};
+                return new String[][] {{"echo"}, {"direction", compass.getLeft()}};
             case RADAR_RIGHT:
-                return new String[][] {{"echo"}, {"direction", turnRight(facing).toString()}};
+                return new String[][] {{"echo"}, {"direction", compass.getRight()}};
             case STOP:
                 return new String[][] {{"stop"}};
             default:
@@ -418,37 +410,16 @@ public class Decider {
         }
     }
 
-    //turnLeft and turnRight facilitate compass turning
-    public Needle turnLeft(Needle current) {
-        Needle turned = current;
-        switch (current) {
-            case N:
-                turned = Needle.W; break;
-            case E:
-                turned = Needle.N; break;
-            case S:
-                turned = Needle.E; break;
-            case W:
-                turned = Needle.S; break;
-        }
-        return turned;
-    }
-    public Needle turnRight(Needle current) {
-        Needle turned = current;
-        switch (current) {
-            case N:
-                turned = Needle.E; break;
-            case E:
-                turned = Needle.S; break;
-            case S:
-                turned = Needle.W; break;
-            case W:
-                turned = Needle.N; break;
-        }
-        return turned;
-    }
+    //##################################################################################################
+    //####################### Analysing Response and Updating ##########################################
+    //##################################################################################################
 
-    //State
+    /*
+    //calls state class and returns log message
+    public String analyseWrapper(JSONObject response) {
+        return state.analyse(response, task, map.getPosition());
+    }
+    */
 
     //analyising the response
     //analyising the response
@@ -495,45 +466,5 @@ public class Decider {
         return aa;
     }
 
-    /*
-    //##################################################################################################
-    //####################### Finding CLosest Creek ####################################################
-    //##################################################################################################
-
-    //location of emergency site
-    int[] site_location = {0, 0};
-
-    //key is creek id, value is array of location
-    Map<String, int[]> location_of_creeks = new HashMap<>();
-
-    //return the key of the closest creek from all creeks or return null
-    private String closestCreek() {
-        String creek_index = null;
-        double shortest_distance = -1;
-
-        //go through all keys and get the location of the creek
-        for (String key : location_of_creeks.keySet()) {
-            int[] creek_location = location_of_creeks.get(key);
-
-            //call function to find distance than update if it the shortest so far
-            double d = distance(creek_location[0], creek_location[1], site_location[0], site_location[1]);
-            if (shortest_distance == -1) {
-                creek_index = key;
-                shortest_distance = d;
-            } else {
-                if (d < shortest_distance) {
-                    creek_index = key;
-                    shortest_distance = d;
-                }
-            }
-        }
-        return creek_index;
-    }
-
-    //calculate distance between 2 points
-    private double distance(int x1, int y1, int x2, int y2) {
-        return Math.sqrt( Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2) ); //sqrt( (x2-x1)^2 + (y2-y1)^2 )
-    }
-    */
 
 }
