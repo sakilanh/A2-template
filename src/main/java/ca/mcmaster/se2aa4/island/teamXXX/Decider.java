@@ -7,7 +7,7 @@ public class Decider {
 
     //Stages of Mission
     private enum Stage {
-        FIND_ISLAND, EXPLORE_ISLAND, CALCULATE_CLOSEST_CREEK, END;
+        FIND_ISLAND, EXPLORE_ISLAND, CALCULATE_CLOSEST_CREEK;
     }
     //current stage
     private Stage stage = Stage.FIND_ISLAND;
@@ -26,7 +26,11 @@ public class Decider {
     private Coordinate map = new Coordinate();
 
     //logging information
-    public String pos_msg = "0-0-E-5-5-FIND_ISLAND";
+    private String pos_msg = "0-0-E-5-5-FIND_ISLAND";
+
+    public String getMessage() {
+        return pos_msg;
+    }
 
     //class for important points
     private Points points = new Points();
@@ -34,69 +38,51 @@ public class Decider {
     //decide function sends an action to Explorer class
     public String[][] decide() {
 
+        //first stage find island
         if (stage == Stage.FIND_ISLAND) {
-            findIsland2();
+            findIsland();
             return getCommand();
+
+        //second stage explore island
         } else if (stage == Stage.EXPLORE_ISLAND) {
             patrol();
             return getCommand();
+
+        //last stage find closest creek and return along with site info
         } else if (stage == Stage.CALCULATE_CLOSEST_CREEK) {
-            //String closest_creek = closestCreek();
             String closest_creek = points.closestCreek();
             if (closest_creek == null) {
                 pos_msg = "NO CREEK FOUND";
             } else {
-                //int[] creek_location = location_of_creeks.get(closest_creek);
                 int[] creek_location = points.getCreekLocation(closest_creek);
                 int[] site_location = points.getSiteLocation();
-                pos_msg = "Site:"+site_location[0]+"-"+site_location[1]+
+                pos_msg = "Site:"+site_location[0]+"-"+site_location[1]+":"+points.getSiteId()+
                 " / Closest Creek:"+creek_location[0]+"-"+creek_location[1]+":"+closest_creek;
             }
             
             task = task.STOP;
-            return getCommand();
         } else {
             task = Task.STOP;
-            return getCommand();
         }
+        return getCommand();
         
     }
 
     //##################################################################################################
     //####################### Finding Island ###########################################################
     //##################################################################################################
-
-    public String[][] findIsland() {
-        if ((task == Task.START)) {
-            task = Task.RADAR_RIGHT;
-        } else if (land_found()) {
-            if (task == Task.RADAR_RIGHT) {
-                task = Task.RIGHT;
-            } else {
-                if (range < 0) {
-                    task = Task.SCAN;
-                    stage = Stage.EXPLORE_ISLAND;
-                } else {
-                    task = Task.FLY;
-                    range -= 1;
-                }
-            }
-        } else {
-            if (task == Task.RADAR_RIGHT) {
-                task = Task.FLY;
-            } else {
-                task = Task.RADAR_RIGHT; 
-            }
-        }
-        return getCommand();
-    }
     
+    public void findIsland() {
 
-    public void findIsland2() {
+            //if you are starting or went left, go right
             if ((task == Task.START)||(task == Task.LEFT)) {
                 task = Task.RIGHT;
+
+            //if you went right, scan infront
             } else if (task == Task.RIGHT) {
                 task = task.RADAR_FRONT;
+
+            //if you find land, go to it, and then move to next stage
             } else if (land_found()) {
                 if (range < 0) {
                     task = Task.SCAN;
@@ -105,10 +91,11 @@ public class Decider {
                     task = Task.FLY;
                     range -= 1;
                 }
+
+            //otherwise go left
             } else {
                 task = Task.LEFT;
             }
-        //return getCommand(); TO REMOVE
     }
 
     //##################################################################################################
@@ -314,7 +301,7 @@ public class Decider {
             points.addToCreeks(creeks.getString(0), map.getPosition());
         }
         if (sites.length() > 0) {
-            points.setSiteLocation(map.getPosition());
+            points.setSiteLocation(map.getPosition(), sites.getString(0));
         }
 
         String logString = "" + biomes.toString() + creeks.toString() + sites.toString();

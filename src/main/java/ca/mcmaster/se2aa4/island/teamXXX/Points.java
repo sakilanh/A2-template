@@ -8,18 +8,27 @@ public class Points {
 
     //location of emergency site
     private int[] site_location = {0, 0};
+
+    //site id
+    private String site_id;
     
     //key is creek id, value is array of location
     private Map<String, int[]> location_of_creeks = new HashMap<>();
 
     //set location of site
-    public void setSiteLocation(int[] loc) {
+    public void setSiteLocation(int[] loc, String id) {
         site_location = loc;
+        site_id = id;
     }
 
     //return location of site
     public int[] getSiteLocation() {
         return site_location.clone();
+    }
+
+    //return site id
+    public String getSiteId() {
+        return site_id;
     }
 
     //add to set of creeks

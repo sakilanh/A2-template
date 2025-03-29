@@ -6,10 +6,12 @@ import ca.mcmaster.se2aa4.island.teamXXX.Decider.Task;
 public class Coordinate {
     private int[] position = {0, 0};
 
+    //return position
     public int[] getPosition() {
         return position.clone();
     }
 
+    //update the position based on move
     public void update(Needle direction, Task move) {
         int[] vector = {0, 0};
         switch (move) {
@@ -24,6 +26,7 @@ public class Coordinate {
         position[1] += vector[1];
     }
 
+    //front move
     private int[] getFrontVector(Needle direction) {
         switch(direction) {
             case N:
@@ -39,6 +42,7 @@ public class Coordinate {
         }
     }
 
+    //left move
     private int[] getLeftVector(Needle direction) {
         switch(direction) {
             case N:
@@ -54,6 +58,7 @@ public class Coordinate {
         }
     }
 
+    //right move
     private int[] getRightVector(Needle direction) {
         switch(direction) {
             case N:

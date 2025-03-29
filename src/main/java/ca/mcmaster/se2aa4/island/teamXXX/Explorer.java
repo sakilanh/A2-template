@@ -1,7 +1,6 @@
 package ca.mcmaster.se2aa4.island.teamXXX;
 
 import java.io.StringReader;
-import java.util.ArrayList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,9 +14,7 @@ public class Explorer implements IExplorerRaid {
     //************************************************************
 
     private Decider decider = new Decider();
-    ArrayList<String> inout = new ArrayList<>();
-    ArrayList<String> poses = new ArrayList<>();
-    int total =0;
+
     //************************************************************
 
     private final Logger logger = LogManager.getLogger();
@@ -49,11 +46,12 @@ public class Explorer implements IExplorerRaid {
         String[][] commands = decider.decide();
         logger.info("###################################################################");
         logger.info(commands[0][0]);
-        inout.add(commands[0][0]);
-        poses.add(decider.pos_msg);
+
+        //log final information
         if (commands[0][0].equals("stop")) {
-            gamestat();
+            logger.info(decider.getMessage());
         }
+
         logger.info("###################################################################");
         for (int i=0; i<commands.length; i++) {
             if (i == 0) {
@@ -87,10 +85,9 @@ public class Explorer implements IExplorerRaid {
         //************************************************************
         logger.info("###################################################################");
         logger.info(response.toString());
-        logger.info("###########################budget########################################");
-        String budget = decider.analyse(response);
-        logger.info(budget);
-        total += cost;
+        logger.info("########################### log from decider ########################################");
+        String infoforlog = decider.analyse(response);
+        logger.info(infoforlog);
         logger.info("###################################################################");
 
         //************************************************************
@@ -100,22 +97,5 @@ public class Explorer implements IExplorerRaid {
     public String deliverFinalReport() {
         return "no creek found";
     }
-
-    //########################################################################################
-    public void gamestat() {
-        int i = 1;
-        int j = 0;
-        for (String e : inout) {
-            if (j % 2 == 0) {
-                logger.info(i);
-                i += 1;
-            }
-            logger.info(e);
-            logger.info(poses.get(j));
-            j += 1;
-        }
-        logger.info("buco:"+total);
-    }
-    //########################################################################################
 
 }
