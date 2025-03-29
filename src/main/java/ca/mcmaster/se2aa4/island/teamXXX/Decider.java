@@ -32,6 +32,11 @@ public class Decider {
     private Coordinate map = new Coordinate();
     public String pos_msg = "0-0-E-5-5-FIND_ISLAND";
 
+    private Points points = new Points();
+
+
+
+
     private String c = "c";
 
     int xdif = 5;
@@ -62,13 +67,16 @@ public class Decider {
             }
             return getCommand();
         } else if (stage == Stage.CALCULATE_CLOSEST_CREEK) {
-            String closest_creek = closestCreek();
+            //String closest_creek = closestCreek();
+            String closest_creek = points.closestCreek();
             if (closest_creek == null) {
                 pos_msg = "NO CREEK FOUND";
             } else {
-                int[] creek_location = location_of_creeks.get(closest_creek);
+                //int[] creek_location = location_of_creeks.get(closest_creek);
+                int[] creek_location = points.getCreekLocation(closest_creek);
+                int[] site_location = points.getSiteLocation();
                 pos_msg = "Site:"+site_location[0]+"-"+site_location[1]+
-                " / Closest Creek:"+creek_location[0]+"-"+creek_location[1]+closest_creek;
+                " / Closest Creek:"+creek_location[0]+"-"+creek_location[1]+":"+closest_creek;
             }
             
             task = task.STOP;
@@ -160,7 +168,7 @@ public class Decider {
            stage = Stage.CALCULATE_CLOSEST_CREEK;
            decide();
 
-        } else if (onlyOcean(biomes) && checkForOcean) {
+        } else if (hasOcean(biomes) && checkForOcean) { //onlyOcean
             offIsland();
         } else if ((task == Task.SCAN)) {
             task = Task.FLY;
@@ -235,6 +243,16 @@ public class Decider {
             }
         }
         return true;
+    }
+
+    //hasOcean function that checks if you are on a ocean tile
+    private boolean hasOcean(JSONArray array) {
+        for (int i=0; i < array.length(); i++) {
+            if (array.getString(i).equals("OCEAN")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //##################################################################################################
@@ -466,15 +484,18 @@ public class Decider {
         creeks = extras.getJSONArray("creeks");
         sites = extras.getJSONArray("sites");
         if (creeks.length() > 0) {
-            location_of_creeks.put(creeks.getString(0), map.getPosition());
+            //location_of_creeks.put(creeks.getString(0), map.getPosition());
+            points.addToCreeks(creeks.getString(0), map.getPosition());
         }
         if (sites.length() > 0) {
-            site_location = map.getPosition();
+            //site_location = map.getPosition();
+            points.setSiteLocation(map.getPosition());
         }
         String aa = "" + biomes.toString() + creeks.toString() + sites.toString();
         return aa;
     }
 
+    /*
     //##################################################################################################
     //####################### Finding CLosest Creek ####################################################
     //##################################################################################################
@@ -513,5 +534,6 @@ public class Decider {
     private double distance(int x1, int y1, int x2, int y2) {
         return Math.sqrt( Math.pow((x2-x1), 2) + Math.pow((y2-y1), 2) ); //sqrt( (x2-x1)^2 + (y2-y1)^2 )
     }
+    */
 
 }
